@@ -1,0 +1,77 @@
+["tool.black"]
+line-length = 88
+
+["tool.isort"]
+profile = "black"
+
+["tool.pytest.ini_options"]
+testpaths = [ "tests",]
+addopts = [ "--cov miniature_happiness", "--cov-report=term-missing", "--cov-fail-under=100", "--verbose"]
+norecursedirs = [ "dist", "build", ".tox",]
+
+["tool.coverage.run"]
+branch = true
+source = [ "miniature_happiness",]
+
+["tool.coverage.paths"]
+source = [ "src/", "*/site-packages/",]
+
+["tool.coverage.report"]
+skip_covered = true
+show_missing = true
+exclude_lines = [ "pragma: no cover", "def __repr__", "if self\\.debug", "raise AssertionError", "raise NotImplementedError", "if 0:", "if __name__ == .__main__.:",]
+
+[tool.flakehell]
+exclude = ["README.md", ".tox", "build", "dist", ]
+max_line_length = 88
+show_source = true
+extended_default_ignore=[]
+docstring_style = "sphinx"
+max-complexity = 8
+max-annotations-complexity = 4
+max-expression-complexity = 7
+
+[tool.flakehell.plugins]
+# include everything in pyflakes except F401
+pyflakes = ["+*", "-F401"]
+# enable everything that starts from `flake8-`
+flake8 = ["+*", "-E203", "-W503"]
+"flake8-*" = ["+*"]
+flake8-annotations = ["+*", "-ANN101"]
+flake8-darglint = ["+*"]
+
+[tool.flakehell.exceptions."tests/"]
+flake8 = ["+*", "-E501"]
+flake8-absolute-import = ["+*", "-ABS101"]
+flake8-annotations = ["-*"]
+flake8-annotations-complexity = ["-*"]
+flake8-bandit = ["+*", "-S101"]
+flake8-darglint = ["-*"]
+flake8-docstrings = ["+*", "-D103"]
+flake8-requirements = ["-*"]
+
+[tool.flakehell.exceptions."app.py"]
+flake8-requirements = ["-*"]
+
+[tool.poetry]
+name = "miniature-happiness"
+version = "0.1.0"
+description = ""
+authors = ["Austin Page <jaustinpage@gmail.com>"]
+
+[tool.poetry.dependencies]
+python = "^3.7"
+Flask = "^2.0.2"
+sqlitedict = "^1.7.0"
+
+[tool.poetry.dev-dependencies]
+pytest = "^5.2"
+coverage = {extras = ["toml"], version = "^6.2"}
+pytest-cov = "^3.0.0"
+pytest-mock = "^3.6.1"
+pytest-flask = "^1.2.0"
+tox = "^3.24.5"
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"

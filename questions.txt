@@ -1,0 +1,4 @@
+It looks like the "times" are hhmm format. Is this the correct way to think about them?
+if so, then is 180 a typeo in the test?
+https://github.com/jaustinpage/miniature-happiness/blob/4d7461c891c1f559e4b55adeae468129965dd627/tests/test_app.py#L17
+

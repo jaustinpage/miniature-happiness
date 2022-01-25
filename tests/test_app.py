@@ -1,35 +1,35 @@
-from app import app
-import json
 import pytest
-import requests
 
-# You are welcome to use a Flask client fixture or test the running instance, as below
-BASE_URL = 'http://127.0.0.1:5000/'
+trains = [
+    {"id": "TOMO", "schedule": [140, 640, 1440]},
+    {"id": "FOMO", "schedule": [440, 640]},
+    {"id": "1", "schedule": [100, 220, 300]},
+]
 
 
-def test_startup():
+def test_startup(client):
     """Asserts that your service starts and responds"""
-    r = requests.get(BASE_URL)
-    assert r.status_code == 200 and r.text == "OK"
+    r = client.get("/")
+    assert r.status_code == 200
+    assert r.data == b"OK"
 
 
-@pytest.mark.parametrize("train", [
-    {'id': 'TOMO', 'schedule': [180, 640, 1440]},
-    {'id': 'FOMO', 'schedule': [440, 640]},
-    {'id': '1', 'schedule': [100, 220, 300]}
-])
-def test_add(train):
+@pytest.mark.parametrize("train", trains)
+def test_add(train, client):
     """Asserts that schedules are added and returned as expected"""
 
-    requests.post(f"{BASE_URL}/trains", json=train)
-    r = requests.get(f"{BASE_URL}/trains/{train['id']}")
+    client.post("/trains", json=train)
+    r = client.get(f"/trains/{train['id']}")
 
-    assert r.json() == train['schedule']
+    assert sorted(r.json) == sorted(train["schedule"])
 
 
-def test_next():
-    """ Implement a test for the /trains/next functionality"""
-    raise NotImplementedError
+def test_next(client):
+    """Implement a test for the /trains/next functionality"""  # noqa: DAR401
+    for train in trains:
+        client.post("/trains", json=train)
+    r = client.get("/trains/next")
+    assert r.data == b"640"
 
 
 # Implement any other necessary tests
