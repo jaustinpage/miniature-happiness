@@ -8,7 +8,7 @@ d = Database()
 
 
 def get_train_schedule(train_id: str) -> TrainSchedule:
-    schedule = d.get("train_id:" + train_id) or set()
+    schedule = d.get("train_id:" + train_id, set())
     return TrainSchedule(id=train_id, schedule=schedule)
 
 
@@ -21,8 +21,8 @@ def list_train_schedules() -> List[str]:
 
 
 def get_time_slot(time: int) -> TimeSlot:
-    trains = d.get("time:" + str(time))
-    return TimeSlot(time, trains)
+    trains = d.get("time:" + str(time), set())
+    return TimeSlot(time=time, trains=trains)
 
 
 def save_time_slot(time_slot: TimeSlot) -> None:
@@ -73,11 +73,14 @@ def update_time_slot(time_slot: TimeSlot) -> None:
     save_time_slot(time_slot)
 
 
-def get_next_conflict(start_time: int, number_of_trains: int = 2) -> int:
+
+def get_next_conflict(start_time: int = 1, number_of_trains: int = 2) -> int:
     start_time = is_time(start_time)
 
+    # max number of time slots is 24hr * 60min
     time_slots = sorted(list_time_slots())
 
+    # rotate the list to start at the first time after the indicated time.
     index = 0
     for i, time in enumerate(time_slots):
         if time >= start_time:
