@@ -6,6 +6,8 @@ from miniature_happiness.shapes import TimeSlot, TrainSchedule, is_time
 
 d = Database()
 
+def get(db_type, key):
+    value = d.get(f"db_type.__name__")
 
 def get_train_schedule(train_id: str) -> TrainSchedule:
     schedule = d.get("train_id:" + train_id, set())
@@ -71,7 +73,6 @@ def update_time_slot(time_slot: TimeSlot) -> None:
         save_train_schedule(train_schedule)
 
     save_time_slot(time_slot)
-
 
 
 def get_next_conflict(start_time: int = 1, number_of_trains: int = 2) -> int:
