@@ -1,3 +1,5 @@
+from dataclasses import astuple  # noqa: SC200
+
 import pytest
 
 from miniature_happiness.shapes import TimeSlot, TrainSchedule
@@ -6,11 +8,11 @@ from miniature_happiness.shapes import TimeSlot, TrainSchedule
 def test_train_schedule():
     ts = TrainSchedule(id="ABC")
     assert ts.id == "ABC"
-    ts.add_time(1)
+    ts.schedule.add(1)
     assert ts.schedule == {1}
-    ts.add_time(2201)
+    ts.schedule.add(2201)
     assert ts.schedule == {1, 2201}
-    ts.remove_time(1)
+    ts.schedule.discard(1)
     assert ts.schedule == {2201}
 
 
@@ -30,11 +32,11 @@ def test_train_schedule_validation(arg, message):
 def test_time_slot():
     ts = TimeSlot(time=1)
     assert ts.time == 1
-    ts.add_train("ABC")
+    ts.trains.add("ABC")
     assert ts.trains == {"ABC"}
-    ts.add_train("DEF")
+    ts.trains.add("DEF")
     assert ts.trains == {"ABC", "DEF"}
-    ts.remove_train("DEF")
+    ts.trains.remove("DEF")
     assert ts.trains == {"ABC"}
 
 
@@ -49,3 +51,8 @@ def test_time_slot():
 def test_time_slot_validation(arg, message):
     with pytest.raises(ValueError, match=message):
         TimeSlot(time=arg)
+
+
+def test_access_via_index():
+    ts = TimeSlot(time=1)
+    assert astuple(ts)[0] == 1  # noqa: SC200

@@ -1,5 +1,6 @@
 24hr
 60min
+astuple
 caplog
 capsys
 cfg
@@ -18,6 +19,7 @@ exc
 expr
 filepath
 func
+Hashable
 iconfig
 isalnum
 isort
@@ -29,6 +31,7 @@ makefile
 metavar
 myproject
 namespaces
+objtype
 onerror
 Params
 pathlib
@@ -50,5 +53,7 @@ tox
 uncomment
 uniqstr
 usefixtures
+Validator
+validator
 venv
 ver

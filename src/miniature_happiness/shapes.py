@@ -1,105 +1,146 @@
-from collections.abc import Iterable
+from abc import ABC, abstractmethod
+from collections.abc import Hashable, Iterable, Iterator, MutableSet
 from dataclasses import dataclass, field
-from typing import Set, Union
+from typing import Any, Optional, Set, Type, Union
+
+StrInt = Union[str, int]
 
 
-def is_time(time: Union[int, str]) -> int:
-    """Check if integer is in the format of HHMM.
+class Validator(ABC):
+    @staticmethod
+    @abstractmethod
+    def validate(value: Any) -> Any:
+        """The validator to use to validate a value.
 
-    :param time: The time to check. strings are cast to int
-    :returns: The time, cast to integer if it was a string
-    :raises ValueError: if the time is not valid
-    """
-    time = int(time)
+        :param value: The value to validate
+        :returns: A cast and coerced value.
+        """
+        pass  # pragma: no cover
 
-    if not 0 <= time < 2400:
-        raise ValueError("hours must be between 0 and 24")
+    def __set_name__(self, owner: Any, name: Any) -> None:
+        self.private_name = "_" + name
 
-    if not 0 <= time % 100 < 60:
-        raise ValueError("minutes must be between 0 and 60")
+    def __get__(self, obj: Any, objtype: Any = None) -> Any:
+        return getattr(obj, self.private_name)
 
-    return time
-
-
-def is_schedule(schedule: Iterable[Union[int, str]]) -> Set[int]:
-    """Check if a schedule is valid.
-
-    :param schedule: The schedule to check. Ensures all items in schedule are
-        times.
-    :returns: The schedule, with times cast to integers.
-    """
-    schedule = schedule or set()
-    schedule_set = {is_time(t) for t in schedule}
-    schedule_set.discard(None)  # type: ignore
-    return schedule_set or set()
+    def __set__(self, obj: Any, value: Any) -> None:
+        value = self.validate(value)
+        setattr(obj, self.private_name, value)
 
 
-def is_train_id(train_id: str) -> str:
-    """Check if a string is a valid train id.
+class HoursMinutes(Validator):
+    """Validator to ensure int of HHMM."""
 
-    :param train_id: The train id to check.
-    :returns: The train id if it is valid.
-    :raises ValueError: If the train id is not valid
-    """
-    if not isinstance(train_id, str):
-        raise ValueError("Must provide train_id as a string")
+    @staticmethod
+    def validate(value: StrInt) -> int:
+        """Check if integer is in the format of HHMM.
 
-    if not train_id.isalnum():
-        raise ValueError("train id must be alphanumeric")
+        :param value: The time to check. strings are cast to int
+        :returns: The time, cast to integer if it was a string
+        :raises ValueError: if the time is not valid
+        """
+        time = int(value)
+        if not 0 <= time < 2400:
+            raise ValueError("hours must be between 0 and 24")
 
-    if not 0 < len(train_id) <= 4:
-        raise ValueError("train id must be 1 to 4 characters long")
+        if not 0 <= time % 100 < 60:
+            raise ValueError("minutes must be between 0 and 60")
+        return time
 
-    return train_id
+
+class TrainID(Validator):
+    """Validator to ensure train id."""
+
+    @staticmethod
+    def validate(value: str) -> str:
+        """Check if a string is a valid train id.
+
+        :param value: The train id to check.
+        :returns: The train id if it is valid.
+        :raises ValueError: If the train id is not valid
+        """
+        if not isinstance(value, str):
+            raise ValueError("Must provide train_id as a string")
+
+        if not value.isalnum():
+            raise ValueError("train id must be alphanumeric")
+
+        if not 0 < len(value) <= 4:
+            raise ValueError("train id must be 1 to 4 characters long")
+
+        return value
 
 
-def is_trains(trains: Iterable[str]) -> Set[str]:
-    """Check if a list of trains are trains.
+class ValidatorSet(MutableSet):
+    """A set that validates the elements of the set."""
 
-    :param trains: The trains list to check.
-    :returns: The set of trains.
-    """
-    trains = trains or set()
-    trains_set = {is_train_id(t) for t in trains}
-    trains_set.discard(None)  # type: ignore
-    return trains_set or set()
+    def __init__(self, iterable: Optional[Iterable] = None) -> None:
+        iterable = iterable or set()
+        self.elements = {self._validator.validate(i) for i in iterable}
+        self.elements.discard(None)  # type: ignore
+
+    @property
+    @abstractmethod
+    def _validator(self) -> Type[Validator]:
+        """The validator to use for elements of the set."""
+
+    def add(self, value: Hashable) -> None:
+        self.elements.add(self._validator.validate(value))
+
+    def discard(self, value: Hashable) -> None:
+        self.elements.discard(value)
+
+    def union(self, other: Iterable) -> Iterable:
+        return self.elements.union(other)
+
+    def difference(self, other: Iterable) -> Iterable:
+        return self.elements.difference(other)
+
+    def __iter__(self) -> Iterator:
+        return iter(self.elements)
+
+    def __contains__(self, value: Hashable) -> bool:
+        return value in self.elements
+
+    def __len__(self) -> int:
+        return len(self.elements)
+
+
+class ScheduleSet(ValidatorSet):
+    _validator = HoursMinutes
+
+
+class TrainsSet(ValidatorSet):
+    _validator = TrainID
+
+
+class ScheduleValidator(Validator):
+    @staticmethod
+    def validate(value: Union["ScheduleValidator", Iterable]) -> ScheduleSet:
+        if isinstance(value, Iterable):
+            return ScheduleSet(value)
+        return ScheduleSet(None)
+
+
+class TrainsValidator(Validator):
+    @staticmethod
+    def validate(value: Union["TrainsValidator", Iterable]) -> TrainsSet:
+        if isinstance(value, Iterable):
+            return TrainsSet(value)
+        return TrainsSet(None)
 
 
 @dataclass
 class TrainSchedule:
     """A schedule of times when a train will be in the station."""
 
-    id: str  # noqa: A003
-    schedule: Set[int] = field(default_factory=set)
-
-    def __post_init__(self) -> None:
-        self.id = is_train_id(self.id)
-        self.schedule = is_schedule(self.schedule)
-
-    def add_time(self, time: Union[int, str]) -> None:
-        time = is_time(time)
-        self.schedule.add(time)
-
-    def remove_time(self, time: Union[int, str]) -> None:
-        time = is_time(time)
-        self.schedule.discard(time)
+    id: Union[str, TrainID] = field(default=TrainID())  # noqa: A003
+    schedule: Union[Set[int], ScheduleValidator] = field(default=ScheduleValidator())
 
 
 @dataclass
 class TimeSlot:
     """A time slot in the day."""
 
-    time: int
-    trains: Set[str] = field(default_factory=set)
-
-    def __post_init__(self) -> None:
-        self.time = is_time(self.time)
-        self.trains = is_trains(self.trains)
-
-    def add_train(self, train_id: str) -> None:
-        train_id = is_train_id(train_id)
-        self.trains.add(train_id)
-
-    def remove_train(self, train_id: str) -> None:
-        train_id = is_train_id(train_id)
-        self.trains.discard(train_id)
+    time: Union[int, HoursMinutes] = field(default=HoursMinutes())
+    trains: Union[Set[str], TrainsValidator] = field(default=TrainsValidator())

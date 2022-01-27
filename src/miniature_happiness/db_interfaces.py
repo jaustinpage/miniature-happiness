@@ -4,7 +4,7 @@ from threading import Lock
 from typing import DefaultDict, Iterator, List, Union
 
 from miniature_happiness.db import Database
-from miniature_happiness.shapes import TimeSlot, TrainSchedule, is_time
+from miniature_happiness.shapes import HoursMinutes, TimeSlot, TrainSchedule
 
 d = Database()
 
@@ -111,7 +111,7 @@ def update_train_schedule(train_schedule: TrainSchedule) -> None:
 def get_next_conflict(
     start_time: int = 1, number_of_trains: int = 2
 ) -> Union[int, None]:
-    start_time = is_time(start_time)
+    start_time = HoursMinutes.validate(start_time)
 
     # max number of time slots is 24hr * 60min
     time_slots = sorted(list_time_slots())
