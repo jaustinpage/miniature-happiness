@@ -10,7 +10,6 @@ from miniature_happiness.db_interfaces import (
     list_train_schedules,
     save_time_slot,
     save_train_schedule,
-    update_time_slot,
     update_train_schedule,
 )
 from miniature_happiness.shapes import TimeSlot, TrainSchedule
@@ -50,29 +49,20 @@ def test_update_train_schedule():
 
 
 @pytest.mark.usefixtures("_new_db")
-def test_update_time_slot():
-    update_time_slot(TimeSlot(1, ["abc", "def"]))
-    assert get_time_slot(1).trains == {"abc", "def"}
-    update_time_slot(TimeSlot(1, ["abc", "123"]))
-    assert get_time_slot(1).trains == {"abc", "123"}
-    update_time_slot(TimeSlot(1, ["123"]))
-    assert get_time_slot(1).trains == {"123"}
-
-
-@pytest.mark.usefixtures("_new_db")
 def test_next_conflict():
     assert get_next_conflict() is None
-    update_time_slot(TimeSlot(2359, ["abc", "def"]))
+    update_train_schedule(TrainSchedule("ABC", {1, 1200, 2359}))
+    update_train_schedule(TrainSchedule("DEF", {2359}))
     assert get_next_conflict() == 2359
-    update_time_slot(TimeSlot(1200, ["abc", "def"]))
+    update_train_schedule(TrainSchedule("DEF", {1200, 2359}))
     assert get_next_conflict() == 1200
-    update_time_slot(TimeSlot(1, ["abc", "def"]))
+    update_train_schedule(TrainSchedule("GHI", {1}))
     assert get_next_conflict() == 1
     assert get_next_conflict(1000) == 1200
     assert get_next_conflict(1300) == 2359
     assert get_next_conflict(number_of_trains=3) is None
-    update_time_slot(TimeSlot(1, ["abc", "def", "ghi"]))
+    update_train_schedule(TrainSchedule("JKL", {1}))
     assert get_next_conflict(number_of_trains=3) == 1
     assert get_next_conflict(1000, number_of_trains=3) == 1
-    update_time_slot(TimeSlot(1200, ["abc", "def", "ghi"]))
+    update_train_schedule(TrainSchedule("MNO", {1200}))
     assert get_next_conflict(1000, number_of_trains=3) == 1200
