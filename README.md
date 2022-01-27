@@ -33,9 +33,7 @@ line that runs through this station and verify its correctness:
 This web service uses a key-value store for keeping state, with the following functions:
 
 - A *db.set(key, value)* method to set the value associated with a key.
-
 - A *db.get(key)* method to retrieve the object set at a key.
-
 - A *db.keys()* method to return the list of all defined keys in the database. This
   function returns an empty list if none have been defined.
 
@@ -75,6 +73,26 @@ To run the test suite, simply execute pytest
 $ python3 -m pytest
 ```
 
+When I am developing, I am using tox to also:
+
+- format imports using isort
+- format code using black
+- format markdown files using mdformat
+- sorting the whitelist.txt spellchecking dictionary
+- manage the requirements.txt file using poetry
+- run pytest to check unit tests
+- run mypy to check types
+- run flake8 with a couple of extra plugins for static code analysis
+
+To run tox:
+
+```bash
+$ python3 -m tox
+```
+
+*Note, the first time you run tox, it will take a while for it to install all of the
+flake8 plugins. It usually is not hung.*
+
 ## Template
 
 ### Assumptions
@@ -95,25 +113,13 @@ used for accepting and returning time arguments. The endpoint should return a 2X
 response for valid requests, and a 4xx request for invalid requests (with actual HTTP
 code at your discretion).
 
-## Expectations and Assumptions
+### Additional Assumptions Made
 
-- You can use whatever language, framework, and tools you feel most comfortable with.
-
-- You can use whatever dependencies are useful to solve the problem.
-
-- You do not need to worry about user authentication or authorization; all endpoints can
-  be public to anonymous users.
-
-- It’s OK (and encouraged) to make additional assumptions that aren’t encoded in this
-  prompt.
-
-- You may ask any questions you need to pursue this prompt, including questions to
-  clarify assumptions around performance requirements, scale, etc.
-
-## Submission
-
-You may submit in one of two ways:
-
-- ZIP the source code (and any supplemental documentation) and return it as an email
-  attachment.
-- Commit and push the code to an accessible GitHub/GitLab/etc repository
+- All train identifiers are for unique trains, not train lines.
+- All time can be simplified to unique 1 minute time slots.
+- All database keys have to be strings.
+- Database queries are a costly operation, and are to be minimized.
+- Times are expressed as 2 digits of hours, 2 digits of minutes (HHMM), and in the
+  original template, the test_app.py, line 17, the schedule value of "180" is a type-o,
+  since minutes can't be more than 59. See:
+  https://github.com/jaustinpage/miniature-happiness/commit/90a9b62e5f63e17284615962e7d6f70e91a46901#diff-a67cb1853203a6f1956991a9d9881d231c4d43557f5baffd45cc672a87e41cc6R17
