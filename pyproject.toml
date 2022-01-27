@@ -59,7 +59,7 @@ flake8-requirements = ["-*"]
 
 [tool.poetry]
 name = "miniature-happiness"
-version = "0.1.1"
+version = "0.1.2"
 description = ""
 authors = ["Austin Page <jaustinpage@gmail.com>"]
 
