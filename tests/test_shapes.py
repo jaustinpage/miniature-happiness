@@ -10,6 +10,8 @@ def test_train_schedule():
     assert ts.schedule == {1}
     ts.add_time(2201)
     assert ts.schedule == {1, 2201}
+    ts.remove_time(1)
+    assert ts.schedule == {2201}
 
 
 @pytest.mark.parametrize(
@@ -17,6 +19,7 @@ def test_train_schedule():
     [
         (None, "Must provide train_id as a string"),
         ("ABCDE", "train id must be 1 to 4 characters long"),
+        (".abc", "train id must be alphanumeric"),
     ],
 )
 def test_train_schedule_validation(arg, message):
@@ -31,6 +34,8 @@ def test_time_slot():
     assert ts.trains == {"ABC"}
     ts.add_train("DEF")
     assert ts.trains == {"ABC", "DEF"}
+    ts.remove_train("DEF")
+    assert ts.trains == {"ABC"}
 
 
 @pytest.mark.parametrize(

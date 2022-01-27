@@ -1,3 +1,5 @@
+24hr
+60min
 caplog
 capsys
 cfg
@@ -8,6 +10,7 @@ conftest
 const
 dasherize
 datefmt
+deque
 dest
 dev's
 docstrings
@@ -16,6 +19,7 @@ expr
 filepath
 func
 iconfig
+isalnum
 isort
 IWUSR
 jsonify
@@ -38,11 +42,13 @@ readouterr
 rmpath
 scm
 shlex
+sqlitedict
 src
 tmp
 tmpfolder
 tox
 uncomment
 uniqstr
+usefixtures
 venv
 ver

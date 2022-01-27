@@ -1,5 +1,4 @@
-from collections import deque
-from typing import List
+from typing import List, Union
 
 from miniature_happiness.db import Database
 from miniature_happiness.shapes import TimeSlot, TrainSchedule, is_time
@@ -8,7 +7,7 @@ d = Database()
 
 
 def get_train_schedule(train_id: str) -> TrainSchedule:
-    schedule = d.get("train_id:" + train_id, set())
+    schedule = d.get("train_id:" + train_id) or set()
     return TrainSchedule(id=train_id, schedule=schedule)
 
 
@@ -21,7 +20,7 @@ def list_train_schedules() -> List[str]:
 
 
 def get_time_slot(time: int) -> TimeSlot:
-    trains = d.get("time:" + str(time), set())
+    trains = d.get("time:" + str(time)) or set()
     return TimeSlot(time=time, trains=trains)
 
 
@@ -43,14 +42,14 @@ def update_train_schedule(train_schedule: TrainSchedule) -> None:
     )
 
     for time_slot in time_slot_deletions:
-        time_slot = get_time_slot(time_slot)
-        time_slot.trains.discard(train_schedule.id)
-        save_time_slot(time_slot)
+        time_slot_o = get_time_slot(time_slot)
+        time_slot_o.trains.discard(train_schedule.id)
+        save_time_slot(time_slot_o)
 
     for time_slot in time_slot_additions:
-        time_slot = get_time_slot(time_slot)
-        time_slot.trains.add(train_schedule.id)
-        save_time_slot(time_slot)
+        time_slot_o = get_time_slot(time_slot)
+        time_slot_o.trains.add(train_schedule.id)
+        save_time_slot(time_slot_o)
 
     save_train_schedule(train_schedule)
 
@@ -61,20 +60,21 @@ def update_time_slot(time_slot: TimeSlot) -> None:
     train_schedule_additions = time_slot.trains.difference(old_time_slot.trains)
 
     for train_schedule in train_schedule_deletions:
-        train_schedule = get_train_schedule(train_schedule)
-        train_schedule.schedule.discard(time_slot.time)
-        save_train_schedule(train_schedule)
+        train_schedule_o = get_train_schedule(train_schedule)
+        train_schedule_o.schedule.discard(time_slot.time)
+        save_train_schedule(train_schedule_o)
 
     for train_schedule in train_schedule_additions:
-        train_schedule = get_train_schedule(train_schedule)
-        train_schedule.schedule.add(time_slot.time)
-        save_train_schedule(train_schedule)
+        train_schedule_o = get_train_schedule(train_schedule)
+        train_schedule_o.schedule.add(time_slot.time)
+        save_train_schedule(train_schedule_o)
 
     save_time_slot(time_slot)
 
 
-
-def get_next_conflict(start_time: int = 1, number_of_trains: int = 2) -> int:
+def get_next_conflict(
+    start_time: int = 1, number_of_trains: int = 2
+) -> Union[int, None]:
     start_time = is_time(start_time)
 
     # max number of time slots is 24hr * 60min
@@ -87,10 +87,9 @@ def get_next_conflict(start_time: int = 1, number_of_trains: int = 2) -> int:
             index = i
             break
 
-    time_slots = deque(time_slots)
-    time_slots.rotate(index)
-    time_slots = list(time_slots)
+    time_slots_rotated = time_slots[index:] + time_slots[:index]
 
-    for time in time_slots:
+    for time in time_slots_rotated:
         if len(get_time_slot(time).trains) >= number_of_trains:
             return time
+    return None

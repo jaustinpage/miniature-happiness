@@ -1,22 +1,22 @@
-["tool.black"]
+[tool.black]
 line-length = 88
 
-["tool.isort"]
+[tool.isort]
 profile = "black"
 
-["tool.pytest.ini_options"]
+[tool.pytest.ini_options]
 testpaths = [ "tests",]
 addopts = [ "--cov miniature_happiness", "--cov-report=term-missing", "--cov-fail-under=100", "--verbose"]
 norecursedirs = [ "dist", "build", ".tox",]
 
-["tool.coverage.run"]
+[tool.coverage.run]
 branch = true
 source = [ "miniature_happiness",]
 
-["tool.coverage.paths"]
+[tool.coverage.paths]
 source = [ "src/", "*/site-packages/",]
 
-["tool.coverage.report"]
+[tool.coverage.report]
 skip_covered = true
 show_missing = true
 exclude_lines = [ "pragma: no cover", "def __repr__", "if self\\.debug", "raise AssertionError", "raise NotImplementedError", "if 0:", "if __name__ == .__main__.:",]
@@ -39,6 +39,10 @@ flake8 = ["+*", "-E203", "-W503"]
 "flake8-*" = ["+*"]
 flake8-annotations = ["+*", "-ANN101"]
 flake8-darglint = ["+*"]
+flake8-isort = ["-*"]
+
+[tool.flakehell.exceptions."__init__.py"]
+flake8-requirements = ["+*", "-I900"]
 
 [tool.flakehell.exceptions."tests/"]
 flake8 = ["+*", "-E501"]

@@ -10,7 +10,7 @@ else:
 
 from flask import Flask
 
-from . import trains
+from miniature_happiness import trains
 
 try:
     # Change here if project is renamed and does not equal the package name
@@ -22,13 +22,13 @@ finally:
     del version, PackageNotFoundError
 
 
-def create_app(test_config=None):
+def create_app() -> Flask:
     # create and configure the app
     app = Flask(__name__, instance_relative_config=True)
 
     # a simple page that says hello
     @app.route("/")
-    def root():
+    def root() -> str:
         return "OK"
 
     app.register_blueprint(trains.trains)
