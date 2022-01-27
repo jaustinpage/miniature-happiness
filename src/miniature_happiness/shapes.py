@@ -4,6 +4,12 @@ from typing import Set, Union
 
 
 def is_time(time: Union[int, str]) -> int:
+    """Check if integer is in the format of HHMM.
+
+    :param time: The time to check. strings are cast to int
+    :returns: The time, cast to integer if it was a string
+    :raises ValueError: if the time is not valid
+    """
     time = int(time)
 
     if not 0 <= time < 2400:
@@ -16,6 +22,12 @@ def is_time(time: Union[int, str]) -> int:
 
 
 def is_schedule(schedule: Iterable[Union[int, str]]) -> Set[int]:
+    """Check if a schedule is valid.
+
+    :param schedule: The schedule to check. Ensures all items in schedule are
+        times.
+    :returns: The schedule, with times cast to integers.
+    """
     schedule = schedule or set()
     schedule_set = {is_time(t) for t in schedule}
     schedule_set.discard(None)  # type: ignore
@@ -23,6 +35,12 @@ def is_schedule(schedule: Iterable[Union[int, str]]) -> Set[int]:
 
 
 def is_train_id(train_id: str) -> str:
+    """Check if a string is a valid train id.
+
+    :param train_id: The train id to check.
+    :returns: The train id if it is valid.
+    :raises ValueError: If the train id is not valid
+    """
     if not isinstance(train_id, str):
         raise ValueError("Must provide train_id as a string")
 
@@ -36,6 +54,11 @@ def is_train_id(train_id: str) -> str:
 
 
 def is_trains(trains: Iterable[str]) -> Set[str]:
+    """Check if a list of trains are trains.
+
+    :param trains: The trains list to check.
+    :returns: The set of trains.
+    """
     trains = trains or set()
     trains_set = {is_train_id(t) for t in trains}
     trains_set.discard(None)  # type: ignore
@@ -44,6 +67,8 @@ def is_trains(trains: Iterable[str]) -> Set[str]:
 
 @dataclass
 class TrainSchedule:
+    """A schedule of times when a train will be in the station."""
+
     id: str  # noqa: A003
     schedule: Set[int] = field(default_factory=set)
 
@@ -62,6 +87,8 @@ class TrainSchedule:
 
 @dataclass
 class TimeSlot:
+    """A time slot in the day."""
+
     time: int
     trains: Set[str] = field(default_factory=set)
 

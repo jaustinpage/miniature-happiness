@@ -23,10 +23,12 @@ finally:
 
 
 def create_app() -> Flask:
-    # create and configure the app
+    """Create and configure flask app.
+
+    :returns: Configured flask app.
+    """
     app = Flask(__name__, instance_relative_config=True)
 
-    # a simple page that says hello
     @app.route("/")
     def root() -> str:
         return "OK"
