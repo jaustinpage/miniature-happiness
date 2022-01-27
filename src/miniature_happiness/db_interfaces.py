@@ -7,32 +7,62 @@ d = Database()
 
 
 def get_train_schedule(train_id: str) -> TrainSchedule:
+    """Get a train schedule from the database.
+
+    :param train_id: The train id to get the schedule for.
+    :returns: Train schedule.
+    """
     schedule = d.get("train_id:" + train_id) or set()
     return TrainSchedule(id=train_id, schedule=schedule)
 
 
 def save_train_schedule(train_schedule: TrainSchedule) -> None:
+    """Save a train schedule to the database.
+
+    :param train_schedule: The train schedule to store in the database.
+    """
     d.set("train_id:" + train_schedule.id, train_schedule.schedule)
 
 
 def list_train_schedules() -> List[str]:
+    """Get a list of all the trains we have schedules for.
+
+    :returns: List of all trains.
+    """
     return [x.split(":", 1)[1] for x in d.keys() if x.startswith("train_id:")]
 
 
 def get_time_slot(time: int) -> TimeSlot:
+    """Get the trains arriving in a time slot for the station.
+
+    :param time: Time slot to retrieve.
+    :returns: Time slot.
+    """
     trains = d.get("time:" + str(time)) or set()
     return TimeSlot(time=time, trains=trains)
 
 
 def save_time_slot(time_slot: TimeSlot) -> None:
+    """Save a time slot to the database.
+
+    :param time_slot: the time slot to save to the database.
+    """
     d.set("time:" + str(time_slot.time), time_slot.trains)
 
 
 def list_time_slots() -> list[int]:
+    """List the times that trains are arriving to the station.
+
+    :returns: list of times when trains arrive.
+    """
     return [int(x.split(":", 1)[1]) for x in d.keys() if x.startswith("time:")]
 
 
 def update_train_schedule(train_schedule: TrainSchedule) -> None:
+    """Update the schedule for a train in the database.
+
+    :param train_schedule: The new train schedule to store.
+    """
     old_train_schedule = get_train_schedule(train_schedule.id)
     time_slot_deletions = old_train_schedule.schedule.difference(
         train_schedule.schedule
@@ -55,6 +85,10 @@ def update_train_schedule(train_schedule: TrainSchedule) -> None:
 
 
 def update_time_slot(time_slot: TimeSlot) -> None:
+    """Update the trains arriving in a time slot for the database.
+
+    :param time_slot: The time slot to update.
+    """
     old_time_slot = get_time_slot(time_slot.time)
     train_schedule_deletions = old_time_slot.trains.difference(time_slot.trains)
     train_schedule_additions = time_slot.trains.difference(old_time_slot.trains)
