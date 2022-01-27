@@ -1,10 +1,11 @@
-from typing import List, Union
 from dataclasses import astuple
+from typing import List, Union
 
 from miniature_happiness.db import Database
 from miniature_happiness.shapes import TimeSlot, TrainSchedule, is_time
 
 d = Database()
+
 
 class DbTypes:
     def __init__(self):
@@ -26,12 +27,15 @@ class DbTypes:
         d.set(f"{self.types[type(db_type_instance)]}:{key}", value)
 
     def list(self, db_type):
-        return {x.split(":", 1)[1] for x in d.keys() if x.startswith(f"db_type.__name__:")}
+        return {
+            x.split(":", 1)[1] for x in d.keys() if x.startswith(f"{db_type.__name__}:")
+        }
 
 
 db = DbTypes()
 db.register(TimeSlot)
 db.register(TrainSchedule)
+
 
 def get_train_schedule(train_id: str) -> TrainSchedule:
     """Get a train schedule from the database.
