@@ -1,7 +1,7 @@
 from typing import List, Union
 
 from miniature_happiness.db import Database
-from miniature_happiness.shapes import TimeSlot, TrainSchedule, is_time
+from miniature_happiness.shapes import HoursMinutes, TimeSlot, TrainSchedule
 
 d = Database()
 
@@ -64,12 +64,8 @@ def update_train_schedule(train_schedule: TrainSchedule) -> None:
     :param train_schedule: The new train schedule to store.
     """
     old_train_schedule = get_train_schedule(train_schedule.id)
-    time_slot_deletions = old_train_schedule.schedule.difference(
-        train_schedule.schedule
-    )
-    time_slot_additions = train_schedule.schedule.difference(
-        old_train_schedule.schedule
-    )
+    time_slot_deletions = old_train_schedule.schedule - train_schedule.schedule
+    time_slot_additions = train_schedule.schedule - old_train_schedule.schedule
 
     for time_slot in time_slot_deletions:
         time_slot_o = get_time_slot(time_slot)
@@ -90,8 +86,8 @@ def update_time_slot(time_slot: TimeSlot) -> None:
     :param time_slot: The time slot to update.
     """
     old_time_slot = get_time_slot(time_slot.time)
-    train_schedule_deletions = old_time_slot.trains.difference(time_slot.trains)
-    train_schedule_additions = time_slot.trains.difference(old_time_slot.trains)
+    train_schedule_deletions = old_time_slot.trains - time_slot.trains
+    train_schedule_additions = time_slot.trains - old_time_slot.trains
 
     for train_schedule in train_schedule_deletions:
         train_schedule_o = get_train_schedule(train_schedule)
@@ -109,7 +105,7 @@ def update_time_slot(time_slot: TimeSlot) -> None:
 def get_next_conflict(
     start_time: int = 1, number_of_trains: int = 2
 ) -> Union[int, None]:
-    start_time = is_time(start_time)
+    start_time = HoursMinutes.validate(start_time)
 
     # max number of time slots is 24hr * 60min
     time_slots = sorted(list_time_slots())
