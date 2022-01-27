@@ -63,6 +63,7 @@ curl -I http://127.0.0.1:5000/
 ```
 
 Response:
+
 ```bash
 HTTP/1.0 200 OK
 Content-Type: text/html; charset=utf-8

@@ -1,9 +1,30 @@
-from typing import List, Union
+from collections import defaultdict
+from contextlib import contextmanager
+from threading import Lock
+from typing import DefaultDict, Iterator, List, Union
 
 from miniature_happiness.db import Database
 from miniature_happiness.shapes import TimeSlot, TrainSchedule, is_time
 
 d = Database()
+
+locks: DefaultDict[str, Lock] = defaultdict(Lock)
+
+
+@contextmanager
+def get_lock_train_schedule(train_schedule: TrainSchedule) -> Iterator[None]:
+    train_schedule_old = get_train_schedule(train_schedule.id)
+
+    with locks["train_id:" + train_schedule.id]:
+        time_slots = train_schedule_old.schedule.union(train_schedule.schedule)
+        time_slots_l = sorted(time_slots)
+        for time_slot in time_slots_l:
+            this_lock = locks["time_slot:" + str(time_slot)]
+            this_lock.acquire(blocking=True)
+
+        yield
+        for time_slot in time_slots_l:
+            locks["time_slot:" + str(time_slot)].release()
 
 
 def get_train_schedule(train_id: str) -> TrainSchedule:
@@ -63,47 +84,26 @@ def update_train_schedule(train_schedule: TrainSchedule) -> None:
 
     :param train_schedule: The new train schedule to store.
     """
-    old_train_schedule = get_train_schedule(train_schedule.id)
-    time_slot_deletions = old_train_schedule.schedule.difference(
-        train_schedule.schedule
-    )
-    time_slot_additions = train_schedule.schedule.difference(
-        old_train_schedule.schedule
-    )
+    with get_lock_train_schedule(train_schedule):
+        old_train_schedule = get_train_schedule(train_schedule.id)
+        time_slot_deletions = old_train_schedule.schedule.difference(
+            train_schedule.schedule
+        )
+        time_slot_additions = train_schedule.schedule.difference(
+            old_train_schedule.schedule
+        )
 
-    for time_slot in time_slot_deletions:
-        time_slot_o = get_time_slot(time_slot)
-        time_slot_o.trains.discard(train_schedule.id)
-        save_time_slot(time_slot_o)
+        for time_slot in time_slot_deletions:
+            time_slot_o = get_time_slot(time_slot)
+            time_slot_o.trains.discard(train_schedule.id)
+            save_time_slot(time_slot_o)
 
-    for time_slot in time_slot_additions:
-        time_slot_o = get_time_slot(time_slot)
-        time_slot_o.trains.add(train_schedule.id)
-        save_time_slot(time_slot_o)
+        for time_slot in time_slot_additions:
+            time_slot_o = get_time_slot(time_slot)
+            time_slot_o.trains.add(train_schedule.id)
+            save_time_slot(time_slot_o)
 
-    save_train_schedule(train_schedule)
-
-
-def update_time_slot(time_slot: TimeSlot) -> None:
-    """Update the trains arriving in a time slot for the database.
-
-    :param time_slot: The time slot to update.
-    """
-    old_time_slot = get_time_slot(time_slot.time)
-    train_schedule_deletions = old_time_slot.trains.difference(time_slot.trains)
-    train_schedule_additions = time_slot.trains.difference(old_time_slot.trains)
-
-    for train_schedule in train_schedule_deletions:
-        train_schedule_o = get_train_schedule(train_schedule)
-        train_schedule_o.schedule.discard(time_slot.time)
-        save_train_schedule(train_schedule_o)
-
-    for train_schedule in train_schedule_additions:
-        train_schedule_o = get_train_schedule(train_schedule)
-        train_schedule_o.schedule.add(time_slot.time)
-        save_train_schedule(train_schedule_o)
-
-    save_time_slot(time_slot)
+        save_train_schedule(train_schedule)
 
 
 def get_next_conflict(
