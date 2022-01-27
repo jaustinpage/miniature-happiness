@@ -1,10 +1,37 @@
 from typing import List, Union
+from dataclasses import astuple
 
 from miniature_happiness.db import Database
 from miniature_happiness.shapes import TimeSlot, TrainSchedule, is_time
 
 d = Database()
 
+class DbTypes:
+    def __init__(self):
+        self.types = {}
+
+    def register(self, type):
+        self.types[type.__name__] = type
+        self.types[type] == type.__name__
+
+    def get(self, db_type, key: str):
+        try:
+            value = d.get(f"{self.types[db_type.__name__]}:{key}")
+            return db_type(key, value)
+        except KeyError:
+            raise ValueError(f"Unknown database type: {db_type.__name__}")
+
+    def save(self, db_type_instance):
+        key, value = astuple(db_type_instance)
+        d.set(f"{self.types[type(db_type_instance)]}:{key}", value)
+
+    def list(self, db_type):
+        return {x.split(":", 1)[1] for x in d.keys() if x.startswith(f"db_type.__name__:")}
+
+
+db = DbTypes()
+db.register(TimeSlot)
+db.register(TrainSchedule)
 
 def get_train_schedule(train_id: str) -> TrainSchedule:
     """Get a train schedule from the database.
