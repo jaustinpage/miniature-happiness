@@ -90,6 +90,12 @@ class ValidatorSet(MutableSet):
     def discard(self, value: Hashable) -> None:
         self.elements.discard(value)
 
+    def union(self, other: Iterable) -> Iterable:
+        return self.elements.union(other)
+
+    def difference(self, other: Iterable) -> Iterable:
+        return self.elements.difference(other)
+
     def __iter__(self) -> Iterator:
         return iter(self.elements)
 
