@@ -22,9 +22,11 @@ def get_lock_train_schedule(train_schedule: TrainSchedule) -> Iterator[None]:
             this_lock = locks["time_slot:" + str(time_slot)]
             this_lock.acquire(blocking=True)
 
-        yield
-        for time_slot in time_slots_l:
-            locks["time_slot:" + str(time_slot)].release()
+        try:
+            yield
+        finally:
+            for time_slot in time_slots_l:
+                locks["time_slot:" + str(time_slot)].release()
 
 
 def get_train_schedule(train_id: str) -> TrainSchedule:
