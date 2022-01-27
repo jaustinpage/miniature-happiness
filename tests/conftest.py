@@ -1,8 +1,8 @@
 import pytest
 
-from miniature_happiness import create_app
+import miniature_happiness
 
 
 @pytest.fixture(scope="session")
 def app():
-    return create_app()
+    return miniature_happiness.create_app()

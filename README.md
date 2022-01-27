@@ -1,216 +1,119 @@
 # miniature-happiness
 
-Add a short description here!
+A simple web service for the local transit authority.
 
-## Description
+Initially the service will support a single train station with an arbitrary number of
+train lines running through it, like the Fulton Street station, which hosts the 2, 3, 4,
+5, A, C, J, and Z lines.
 
-A longer description of your project goes here...
+We would like the service to manage the schedules of the trains in this station,
+recording when they arrive as well as reporting when multiple trains are in the station
+at the same time.
 
-## Prerequisites
+## Objective & Requirements
 
-- Python 3.6+
-- up to date pip
-  ```shell
-  # this needs to be done outside of a virtualenv, not inside
-  pip install --upgrade pip
-  ```
+Write a small API web service that provides endpoints to track and manage the train
+schedules for the station and the data storage mechanism for it.
 
-## Install
+### Service Capability
 
-To Install and use this library:
+The web service should provide a means for clients to post a schedule for a new train
+line that runs through this station and verify its correctness:
 
-```shell
-pip install --upgrade pip
-pip install git+ssh://github.com/jaustinpage/miniature-happiness#egg=miniature-happiness
+- A request to `/trains` should accept a train identifier (a string that contains up to
+  four alphanumeric characters, e.g. ‘EWR0’, ‘ALP5’, ‘TOMO’, etc) and a list of times
+  when the train arrives in the station
+- A request to `/trains/<train_id>` should provide the schedule for the specified train
+  identifier
+- A request to `/trains/next` should return the time two or more trains will be in the
+  station.
+
+### Data Storage Capability
+
+This web service uses a key-value store for keeping state, with the following functions:
+
+- A *db.set(key, value)* method to set the value associated with a key.
+
+- A *db.get(key)* method to retrieve the object set at a key.
+
+- A *db.keys()* method to return the list of all defined keys in the database. This
+  function returns an empty list if none have been defined.
+
+The service should be threadsafe and use this hypothetical key-value store (with only
+these three methods available).
+
+## Installation
+
+The original prompt instructions work nicely, provided pip is up to date.
+
+1. Download the latest major version of Python (3.9.8+)
+1. Start virtualenv, install the requirements and start flask, as below:
+
+```bash
+$ python3.9 -m venv venv
+$ . venv/bin/activate
+$ python3 -m pip install --upgrade pip
+$ python3 -m pip install -r requirements.txt
+$ python3 -m flask run
 ```
 
-Then, in your python script, you can use the library.
+To verify that Flask is running the template service, issue a CURL (or browser request)
+to http://127.0.0.1:5000/, e.g.
 
-```python
-import miniature-happiness
-miniature-happiness.<do something awesome>()
+```bash
+% curl -I http://127.0.0.1:5000/ 
+HTTP/1.0 200 OK
+Content-Type: text/html; charset=utf-8
+Content-Length: 2
+Server: Werkzeug/2.0.2 Python/3.10.0
+Date: Fri, 12 Nov 2021 01:42:25 GMT                       
 ```
 
-If you are using this library from another python library, dont forget to update your
-`setup.cfg` \[options\] install-requires section!
+To run the test suite, simply execute pytest
 
-## Development Setup
-
-Found a bug? Need a feature? Get set up for development on miniature-happiness here.
-
-### Windows
-
-#### Windows Development tools
-
-- [PyCharm professional](https://www.jetbrains.com/pycharm/)
-
-#### Windows Setup
-
-1. Update pip
-   ```shell
-   pip install --upgrade pip
-   ```
-1. Install tox
-
-```shell
-# this needs to be done outside of a virtualenv, not inside
-pip install --upgrade tox
+```bash
+$ python3 -m pytest
 ```
 
-1. Make a `Documents\github` folder
-1. Clone this repo to `Documents\github\miniature-happiness` folder using git
-1. Launch PyCharm
-   1. go to `File -> Open...`
-   1. Select `Documents\github\miniature-happiness` in the prompt
-   1. Select Open project in `New Window`
-   1. In the bottom-right corner of the screen, it says `No Interpreter`. Click on this
-      box and select `Add Interpreter`
-   1. In the Add Python Interpreter prompt, select `New Interpreter`, Location:
-      `Documents\github\miniature-happiness\.venv`. Select `OK`
-   1. Make a branch in git for your feature
-   1. Fix the bug or add the feature
-   1. Commit, push, let the repo owner know that there is a fix available
+## Template
 
-### Ubuntu (linux)
+### Assumptions
 
-#### Ubuntu Development tools
+- All trains have the same schedule each day (i.e. no special schedules for weekends and
+  holidays).
 
-- [PyCharm professional](https://www.jetbrains.com/pycharm/)
+- If there are no times after the specified time value when multiple trains will be in
+  the station simultaneously, the service should "wrap around" and return the first time
+  of the day when multiple trains arrive at the station simultaneously (tomorrow,
+  perhaps)
 
-#### Ubuntu setup
+- If there are no instances when multiple trains are in the station at the same time,
+  this method should return no time.
 
-In a terminal
+You may define the API contract for this service however you wish, including the format
+used for accepting and returning time arguments. The endpoint should return a 2XX
+response for valid requests, and a 4xx request for invalid requests (with actual HTTP
+code at your discretion).
 
-```shell
-# Install and git
-sudo apt install git
-# Install tox (this needs to be done outside of a virtualenv, not inside)
-pip install --upgrade tox
-mkdir -p ~/github
-# Clone the repo
-git clone ssh://github.com/jaustinpage/miniature-happiness ~/github/miniature-happiness
-# change working directory to repo
-cd ~/github/miniature-happiness
-# Build the code
-tox
-```
+## Expectations and Assumptions
 
-At this point, I recommend using PyCharm to continue development.
+- You can use whatever language, framework, and tools you feel most comfortable with.
 
-1. Make a branch in git for your feature
-1. Fix the bug or add the feature
-1. Commit, push, let the repo owner know that there is a fix available
+- You can use whatever dependencies are useful to solve the problem.
 
-### A normal day of editing
+- You do not need to worry about user authentication or authorization; all endpoints can
+  be public to anonymous users.
 
-1. `cd ~/github/miniature-happiness`
-1. Make some edits
-1. run `tox`, have failing tests
-   1. fix some tests, and run `pytest`. Repeat until tests passing.
-1. run `tox`, have linting errors
-   1. Linting errors are a great way to learn how python works. Fix these. rerun `tox`.
-      Repeat.
-1. run `tox`, have code coverage errors. Increase the test coverage and rerun `tox`
-1. Wheels are built, test the code manually, commit, and push for review.
+- It’s OK (and encouraged) to make additional assumptions that aren’t encoded in this
+  prompt.
 
-##FAQ
+- You may ask any questions you need to pursue this prompt, including questions to
+  clarify assumptions around performance requirements, scale, etc.
 
-### Common Lint Errors and how to fix them:
+## Submission
 
-- `SC100` or `SC200`: If the flagged word is a false positive, add the word to anywhere
-  `whitelist.txt` file. `tox` will automatically sort the file alphabetically the next
-  time it is run.
+You may submit in one of two ways:
 
-##Repo/Library Management Tasks
-
-### First build
-
-You have just finished running PyScaffold jaustinpage. Follow these steps first. This
-only needs to be done for the library once.
-
-1. Make initial commit in new repo and build
-   ```shell
-   cd ~/github/miniature-happiness
-   rm -rf .git .github  # There is not a way to disable git in pyscaffold.
-   git add
-   git commit -m "Initial commit"
-   tox
-   git add docs
-   git commit -m "Post initial build commit"
-   git tag 0.0.1
-   ```
-1. Remove the `First Build` section from this file, commit, and push.
-   ```shell
-   cd ~/github/miniature-happiness
-   # use your favorite editor to remove the first build section
-   tox # make sure library still builds. If success: continue
-   git commit -m "Removing first build section from Readme.md"
-   git tag 0.0.2
-   git push
-   ```
-
-### How to add a 3rd party (PyPi) runtime dependency
-
-1. In `setup.cfg` find `[options]` and add dependency to `install_requires =`. For
-   example to add `pandas` to your runtime dependencies, make the `[options]` secton
-   look like this:
-   ```shell
-   # file: setup.cfg
-   <... truncated ...>
-   [options]
-   <... truncated ...>
-   install_requires =
-       importlib-metadata; python_version<"3.6"
-       pyscaffold>=4.0,<5.0a0
-       pyscaffoldext-markdown
-       pandas
-   ```
-1. Run `tox`. Package will automatically be installed.
-
-### Advanced: Creating a new package version
-
-remember to use [Semantic versioning](https://www.python.org/dev/peps/pep-0440/) (tldr:
-use #.#.#, and only increment the last digit, unless you are changing the api call
-signatures)
-
-1. on the default branch run
-
-   ```shell
-   git pull --update
-   git status  # Make sure current directory is clean
-   git tag -r <version you want to tag> <version>
-   git push
-   ```
-
-   For example, if you want the current tip to be version 0.0.2, then `git tag 0.0.2`.
-   Then push the tag.
-
-### Updating repository boilerplate files
-
-```shell
-# Get latest boilerplate
-pip install --update git+ssh://github.com/jaustinpage/pyscaffoldext-jaustinpage#egg=pyscaffoldext-jaustinpage
-# Make a commit
-cd pyscaffold-jaustinpage
-git add .
-git commit -m "Preparing to update boilerplate"
-# Update boilerplate
-putup --update
-# Make sure the build is good
-tox
-# Commit new files
-git add
-git commit -m "Updating boilerplate."
-git tag <new package version>
-git push
-```
-
-<!-- pyscaffold-notes -->
-
-## Note
-
-This project has been set up using PyScaffold 4.1.1. For details and usage information
-on PyScaffold see https://pyscaffold.org/.
-
-```
-```
+- ZIP the source code (and any supplemental documentation) and return it as an email
+  attachment.
+- Commit and push the code to an accessible GitHub/GitLab/etc repository
