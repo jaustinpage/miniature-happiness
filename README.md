@@ -48,18 +48,22 @@ The original prompt instructions work nicely, provided pip is up to date.
 1. Start virtualenv, install the requirements and start flask, as below:
 
 ```bash
-$ python3.9 -m venv venv
-$ . venv/bin/activate
-$ python3 -m pip install --upgrade pip
-$ python3 -m pip install -r requirements.txt
-$ python3 -m flask run
+python3.9 -m venv venv
+. venv/bin/activate
+python3 -m pip install --upgrade pip
+python3 -m pip install -r requirements.txt
+python3 -m flask run
 ```
 
 To verify that Flask is running the template service, issue a CURL (or browser request)
 to http://127.0.0.1:5000/, e.g.
 
 ```bash
-% curl -I http://127.0.0.1:5000/ 
+curl -I http://127.0.0.1:5000/ 
+```
+
+Response:
+```bash
 HTTP/1.0 200 OK
 Content-Type: text/html; charset=utf-8
 Content-Length: 2
@@ -70,7 +74,7 @@ Date: Fri, 12 Nov 2021 01:42:25 GMT
 To run the test suite, simply execute pytest
 
 ```bash
-$ python3 -m pytest
+python3 -m pytest
 ```
 
 When I am developing, I am using tox to also:
@@ -87,7 +91,7 @@ When I am developing, I am using tox to also:
 To run tox:
 
 ```bash
-$ python3 -m tox
+python3 -m tox
 ```
 
 *Note, the first time you run tox, it will take a while for it to install all of the
@@ -123,3 +127,37 @@ code at your discretion).
   original template, the test_app.py, line 17, the schedule value of "180" is a type-o,
   since minutes can't be more than 59. See:
   https://github.com/jaustinpage/miniature-happiness/commit/90a9b62e5f63e17284615962e7d6f70e91a46901#diff-a67cb1853203a6f1956991a9d9881d231c4d43557f5baffd45cc672a87e41cc6R17
+
+## Layout
+
+Files are in data-flow order, roughly the order that they occur in as the app is being
+used.
+
+```shell
+#### Flask() app consumers ####
+app.py                  usability shim to make "flask run" work
+tests/
+  conftest.py           pytest fixture for flask app
+  test_*.py             pytest unit tests to test app
+  
+#### create_app() ####
+src/
+  miniature_happiness/
+    __init__.py         create_app() to create a flask app (used by app.py, conftest.py)
+    trains.py           http /trains endpoint blueprint for flask
+
+#### db ####
+src/
+  miniature_happiness/
+    db_interface.py    higher level access to the database
+    db.py              database as described by the prompt
+    
+#### shapes ####
+src/
+  miniature_happiness/
+    shapes.py          dataclass containers for objects that are returned by the
+                       api and stored in the database
+```
+
+Almost all other files are boilerplate files for either tox, pytest, pip, flake8, mypy,
+poetry, github actions, coverage, or the build and test process.
